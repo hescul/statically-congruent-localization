@@ -1,0 +1,14 @@
+# build output
+/build/
+/external/build/
+
+# CMake build files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# CLion files
+*.iml
+*.ipr
+*.iws
