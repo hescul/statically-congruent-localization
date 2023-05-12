@@ -36,7 +36,7 @@ int main(const int argc, char** argv) {
         }
     }
 
-    img = cv::imread("input/hcmut_campus.jpg");
+    img = cv::imread("input/map_dist_1.png");
 
     cv::Mat gray;
     cvtColor(img, gray, cv::COLOR_BGR2GRAY);
@@ -151,7 +151,7 @@ void mouseCallback(const int event, const int x, const int y, const int flags, v
         const auto visibleRadiusText = "Visible Radius : " + std::to_string(visibleRadius);
         makeText(clone, visibleRadiusText, 1);
 
-        const auto visiblePointText = "Visible Points: " + std::to_string(stat.visiblePoints.size());
+        const auto visiblePointText = "Visible Points: " + std::to_string(stat.visiblePoints.size()-1);
         makeText(clone, visiblePointText, 2);
 
         const auto offlineTimeText = "[+] Offline phase took: " + std::to_string(stat.offlineTime) + " seconds";
