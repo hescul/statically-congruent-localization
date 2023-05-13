@@ -15,8 +15,10 @@ std::vector<cv::Point2f> obtainCorners(cv::Mat dst);
 void mouseCallback(int event, int x, int y, int flags, void* userData);
 void makeText(const cv::Mat& target, const std::string& text, int line);
 
-std::vector<Point2D> myMap{};
+std::vector<Point2D> mesh{};
 Point2D lostPoint{};
+
+OfflineStat offlineStat;
 
 constexpr auto WINDOW = "Localization";
 
@@ -36,7 +38,7 @@ int main(const int argc, char** argv) {
         }
     }
 
-    img = cv::imread("input/map_dist_1.png");
+    img = cv::imread("input/map_dist_3+1_no_bus.png");
 
     cv::Mat gray;
     cvtColor(img, gray, cv::COLOR_BGR2GRAY);
@@ -50,7 +52,7 @@ int main(const int argc, char** argv) {
     // Initialize my map
     const auto corners = obtainCorners(dst);
     for (const auto& corner : corners) {
-        myMap.emplace_back(corner.x, corner.y);
+        mesh.emplace_back(corner.x, corner.y);
     }
 
 
@@ -66,7 +68,11 @@ int main(const int argc, char** argv) {
     }
 
     std::cout << "==================== NO GPS LOCALIZATION ====================== \n";
+    std::cout << "Calculating Offline Phase\n";
+    offlineStat = generateMyMap(mesh);
+    std::cout << "Done! Ofline Phase took " + std::to_string(offlineStat.offlineTime) + " seconds\n";
     cv::namedWindow(WINDOW);
+
     cv::setMouseCallback(WINDOW, mouseCallback, nullptr);
 
     imshow(WINDOW, img);
@@ -118,46 +124,53 @@ void mouseCallback(const int event, const int x, const int y, const int flags, v
 
         std::cout << "Lost at: " << x << ' ' << y << '\n';
 
-        lostPoint = Point2D(static_cast<float>(x), static_cast<float>(y));
-        const auto stat = navigate(myMap, lostPoint, visibleRadius);
-
         // The lost point
         circle(clone, cv::Point(x, y), 6, cv::Scalar(0, 0, 0), -1);
 
+        imshow(WINDOW, clone);
+        for(int k = 0; k < 10000; k++ ){
+            std::cout << "a";
+        }
+        std::cout << std::endl;
+
+        lostPoint = Point2D(static_cast<float>(x), static_cast<float>(y));
+        const auto onlineStat = navigate(offlineStat.myMap, mesh, lostPoint, visibleRadius);
+
+
         // The closest point
-        const auto closestPoint = stat.closestPoint;
+        const auto closestPoint = onlineStat.closestPoint;
         circle(
                 clone, cv::Point(static_cast<int>(closestPoint.x), static_cast<int>(closestPoint.y)),
                 visibleRadius, cv::Scalar(255, 255, 20), 2
         );
 
         // The visible points
-        for (const auto& visible : stat.visiblePoints) {
+        for (const auto& visible : onlineStat.visiblePoints) {
             circle(clone, cv::Point(static_cast<int>(visible.x), static_cast<int>(visible.y)),
                    6, cv::Scalar(169, 169, 169), -1
             );
         }
 
         // The found point
-        for (const auto& result : stat.suggestedPoints) {
+        for (const auto& result : onlineStat.suggestedPoints) {
             circle(clone, cv::Point(static_cast<int>(result.x), static_cast<int>(result.y)),
                    6, cv::Scalar(255, 255, 0), -1
             );
         }
 
-        const auto mapSizeText = "Map Size: " + std::to_string(myMap.size());
+        const auto mapSizeText = "Map Size: " + std::to_string(mesh.size());
         makeText(clone, mapSizeText, 0);
 
+        const auto offlineTimeText = "[+] Offline phase took: " + std::to_string(offlineStat.offlineTime) + " seconds";
+        makeText(clone, offlineTimeText, 1);
+
         const auto visibleRadiusText = "Visible Radius : " + std::to_string(visibleRadius);
-        makeText(clone, visibleRadiusText, 1);
+        makeText(clone, visibleRadiusText, 2);
 
-        const auto visiblePointText = "Visible Points: " + std::to_string(stat.visiblePoints.size()-1);
-        makeText(clone, visiblePointText, 2);
+        const auto visiblePointText = "Visible Points: " + std::to_string(onlineStat.visiblePoints.size()-1);
+        makeText(clone, visiblePointText, 3);
 
-        const auto offlineTimeText = "[+] Offline phase took: " + std::to_string(stat.offlineTime) + " seconds";
-        makeText(clone, offlineTimeText, 3);
-
-        const auto onlineTimeText = "[+] Online phase took: " + std::to_string(stat.onlineTime) + " seconds";
+        const auto onlineTimeText = "[+] Online phase took: " + std::to_string(onlineStat.onlineTime) + " seconds";
         makeText(clone, onlineTimeText, 4);
 
         const auto separateText = std::string{ "-----------------" };
@@ -167,7 +180,7 @@ void mouseCallback(const int event, const int x, const int y, const int flags, v
         makeText(clone, resultText, 6);
 
         auto line = 7;
-        for (const auto& result : stat.suggestedPoints) {
+        for (const auto& result : onlineStat.suggestedPoints) {
             const auto pointText = "(" + std::to_string(result.x) + ", " + std::to_string(result.y) + ")";
             makeText(clone, pointText, line++);
         }

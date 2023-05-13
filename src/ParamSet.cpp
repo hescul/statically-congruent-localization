@@ -99,7 +99,7 @@ std::vector<Point2D> onlinePhase(const std::vector<ParamSet>& myMap, const Param
         return resultPoints;
     }
     for (unsigned i = 0; i < myMap.size(); ++i) {
-        // Check if target visiblePs's distances is subset of node's distances
+        // Check if target visiblePS's distances is subset of node's distances
         auto found = isSubset(visiblePs.distances, myMap[i].distances);
         if (found) {
             if (visiblePs.angles.empty()) {

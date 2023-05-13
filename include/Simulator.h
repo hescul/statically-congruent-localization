@@ -7,12 +7,18 @@
 
 #include "ParamSet.h"
 
-struct Stat {
+struct OnlineStat {
     std::vector<Point2D> visiblePoints;
     Point2D closestPoint;
     std::vector<Point2D> suggestedPoints;
-    double offlineTime;
     double onlineTime;
 };
 
-Stat navigate(const std::vector<Point2D>& mesh, const Point2D& lostPoint, int visibleRadius);
+struct OfflineStat {
+    std::vector<ParamSet> myMap;
+    double offlineTime;
+};
+
+OnlineStat navigate(const std::vector<ParamSet>& myMap, const std::vector<Point2D>& mesh, const Point2D& lostPoint, int visibleRadius);
+
+OfflineStat generateMyMap(const std::vector<Point2D>& mesh);

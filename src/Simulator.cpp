@@ -26,17 +26,10 @@ public:
     }
 };
 
-Stat navigate(const std::vector<Point2D>& mesh, const Point2D& lostPoint, const int visibleRadius) {
+OnlineStat navigate(const std::vector<ParamSet>& myMap, const std::vector<Point2D>& mesh, const Point2D& lostPoint, const int visibleRadius) {
     std::cout << "Map Size: " << mesh.size() << '\n';
     std::cout << "Visible Radius: " << visibleRadius << '\n';
 
-    // Offline Phase
-    auto timer = Timer{};
-    const auto myMap = offlinePhase(mesh);
-    const auto offlineTime = timer.elapsed();
-    std::cout << "[t] Offline phase took: " << offlineTime << " seconds\n";
-
-    // Online Phase
     auto closestPoint = Point2D{};
     auto minDistance = std::numeric_limits<float>::max();
 
@@ -58,6 +51,7 @@ Stat navigate(const std::vector<Point2D>& mesh, const Point2D& lostPoint, const 
     const auto visiblePs = generateParamSet(closestPoint, visiblePoints);
     std::cout << "Number of visible points: " << visiblePoints.size() - 1 << '\n';
 
+    auto timer = Timer{};
     timer.reset();
     const auto suggestedPoints = onlinePhase(myMap, visiblePs, mesh);
     const auto onlineTime = timer.elapsed();
@@ -68,5 +62,14 @@ Stat navigate(const std::vector<Point2D>& mesh, const Point2D& lostPoint, const 
     for (const auto& result : suggestedPoints) {
         std::cout << result.x << " " << result.y << '\n';
     }
-    return Stat{ visiblePoints, closestPoint, suggestedPoints, offlineTime, onlineTime };
+    return OnlineStat{ visiblePoints, closestPoint, suggestedPoints, onlineTime };
+}
+
+OfflineStat generateMyMap(const std::vector<Point2D>& mesh){
+    // Offline Phase
+    auto timer = Timer{};
+    const auto myMap = offlinePhase(mesh);
+    const auto offlineTime = timer.elapsed();
+    std::cout << "[t] Offline phase took: " << offlineTime << " seconds\n";
+    return OfflineStat{ myMap, offlineTime };
 }
