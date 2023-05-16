@@ -38,7 +38,7 @@ int main(const int argc, char** argv) {
         }
     }
 
-    img = cv::imread("input/map_dist_3+1_no_bus.png");
+    img = cv::imread("input/hcmut_campus.jpg");
 
     cv::Mat gray;
     cvtColor(img, gray, cv::COLOR_BGR2GRAY);
@@ -69,8 +69,8 @@ int main(const int argc, char** argv) {
 
     std::cout << "==================== NO GPS LOCALIZATION ====================== \n";
     std::cout << "Calculating Offline Phase\n";
+    std::cout << "Map size: " + std::to_string(mesh.size()) <<std::endl;
     offlineStat = generateMyMap(mesh);
-    std::cout << "Done! Ofline Phase took " + std::to_string(offlineStat.offlineTime) + " seconds\n";
     cv::namedWindow(WINDOW);
 
     cv::setMouseCallback(WINDOW, mouseCallback, nullptr);
@@ -124,18 +124,11 @@ void mouseCallback(const int event, const int x, const int y, const int flags, v
 
         std::cout << "Lost at: " << x << ' ' << y << '\n';
 
-        // The lost point
-        circle(clone, cv::Point(x, y), 6, cv::Scalar(0, 0, 0), -1);
-
-        imshow(WINDOW, clone);
-        for(int k = 0; k < 10000; k++ ){
-            std::cout << "a";
-        }
-        std::cout << std::endl;
-
         lostPoint = Point2D(static_cast<float>(x), static_cast<float>(y));
         const auto onlineStat = navigate(offlineStat.myMap, mesh, lostPoint, visibleRadius);
 
+        // The lost point
+        circle(clone, cv::Point(x, y), 6, cv::Scalar(0, 0, 0), -1);
 
         // The closest point
         const auto closestPoint = onlineStat.closestPoint;
